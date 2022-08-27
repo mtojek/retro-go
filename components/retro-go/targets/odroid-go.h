@@ -12,7 +12,7 @@
 
 // Video
 #define RG_SCREEN_DRIVER            0   // 0 = ILI9341
-#define RG_SCREEN_TYPE              0
+#define RG_SCREEN_TYPE              32
 #define RG_SCREEN_WIDTH             320
 #define RG_SCREEN_HEIGHT            240
 #define RG_SCREEN_ROTATE            0
@@ -56,9 +56,9 @@
 #define RG_GPIO_LCD_MISO            GPIO_NUM_19
 #define RG_GPIO_LCD_MOSI            GPIO_NUM_23
 #define RG_GPIO_LCD_CLK             GPIO_NUM_18
-#define RG_GPIO_LCD_CS              GPIO_NUM_5
-#define RG_GPIO_LCD_DC              GPIO_NUM_21
-#define RG_GPIO_LCD_BCKL            GPIO_NUM_14
+#define RG_GPIO_LCD_CS              GPIO_NUM_14
+#define RG_GPIO_LCD_DC              GPIO_NUM_16
+#define RG_GPIO_LCD_BCKL            GPIO_NUM_17
 
 // SPI SD Card
 #define RG_GPIO_SDSPI_HOST          SPI2_HOST

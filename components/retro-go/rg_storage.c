@@ -68,7 +68,7 @@ void rg_storage_init(void)
     sdmmc_host_t host_config = SDSPI_HOST_DEFAULT();
     host_config.flags = SDMMC_HOST_FLAG_SPI;
     host_config.slot = RG_GPIO_SDSPI_HOST;
-    host_config.max_freq_khz = SDMMC_FREQ_DEFAULT; // SDMMC_FREQ_HIGHSPEED
+    host_config.max_freq_khz = SDMMC_FREQ_PROBING; // SDMMC_FREQ_DEFAULT // SDMMC_FREQ_HIGHSPEED
     host_config.do_transaction = &sdcard_do_transaction;
     // These are for esp-idf 4.2 compatibility
     host_config.init = &sdspi_host_init;

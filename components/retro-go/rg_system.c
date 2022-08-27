@@ -307,6 +307,11 @@ rg_app_t *rg_system_init(int sampleRate, const rg_handlers_t *handlers, const rg
     printf("========================================================\n\n");
 
     RG_LOGI("Welcome! Reset reason: %d\n", esp_reset_reason());
+    multi_heap_info_t heap_info = {0};
+    heap_caps_get_info(&heap_info, MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT);
+    RG_LOGI("Internal memory: free=%d, total=%d\n", heap_info.total_free_bytes, heap_info.total_free_bytes + heap_info.total_allocated_bytes);
+    heap_caps_get_info(&heap_info, MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);
+    RG_LOGI("External memory: free=%d, total=%d\n", heap_info.total_free_bytes, heap_info.total_free_bytes + heap_info.total_allocated_bytes);
 
     app = (rg_app_t){
         .name = esp_app->project_name,
@@ -351,7 +356,7 @@ rg_app_t *rg_system_init(int sampleRate, const rg_handlers_t *handlers, const rg
     rg_gui_init();
 
     // Test for recovery request as early as possible
-    for (int timeout = 5; rg_input_key_is_pressed(RG_KEY_ANY) && timeout >= 0; --timeout)
+    for (int timeout = 5; rg_input_key_is_pressed(RG_KEY_B) && timeout >= 0; --timeout)
     {
         RG_LOGW("Button 0x%04X being held down...\n", rg_input_read_gamepad());
         vTaskDelay(pdMS_TO_TICKS(100));
@@ -851,7 +856,7 @@ void *rg_alloc(size_t size, uint32_t caps)
     uint32_t esp_caps = 0;
     void *ptr;
 
-    esp_caps |= (caps & MEM_SLOW ? MALLOC_CAP_SPIRAM : (caps & MEM_FAST ? MALLOC_CAP_INTERNAL : 0));
+    //esp_caps |= (caps & MEM_SLOW ? MALLOC_CAP_SPIRAM : (caps & MEM_FAST ? MALLOC_CAP_INTERNAL : 0));
     esp_caps |= (caps & MEM_DMA ? MALLOC_CAP_DMA : 0);
     esp_caps |= (caps & MEM_EXEC ? MALLOC_CAP_EXEC : 0);
     esp_caps |= (caps & MEM_32BIT ? MALLOC_CAP_32BIT : MALLOC_CAP_8BIT);
@@ -862,6 +867,7 @@ void *rg_alloc(size_t size, uint32_t caps)
     if (esp_caps & MALLOC_CAP_EXEC)     strcat(caps_list, "IRAM|");
     strcat(caps_list, (esp_caps & MALLOC_CAP_32BIT) ? "32BIT" : "8BIT");
 
+    RG_LOGI("Want to allocate: SIZE=%u, CAPS=%s\n", size, caps_list);
     if ((ptr = heap_caps_calloc(1, size, esp_caps)))
     {
         RG_LOGI("SIZE=%u, CAPS=%s, PTR=%p\n", size, caps_list, ptr);

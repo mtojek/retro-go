@@ -38,6 +38,7 @@ void rg_gui_init(void)
 {
     gui.screen_width = rg_display_get_status()->screen.width;
     gui.screen_height = rg_display_get_status()->screen.height;
+    RG_LOGI("gui.screen_width=%d, gui.screen_height=%d\n", gui.screen_width, gui.screen_height);
     gui.draw_buffer = rg_alloc(RG_MAX(gui.screen_width, gui.screen_height) * 20 * 2, MEM_SLOW);
     rg_gui_set_font_type(rg_settings_get_number(NS_GLOBAL, SETTING_FONTTYPE, RG_FONT_VERA_12));
     rg_gui_set_theme(rg_settings_get_string(NS_GLOBAL, SETTING_THEME, NULL));
