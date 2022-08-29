@@ -313,6 +313,16 @@ rg_app_t *rg_system_init(int sampleRate, const rg_handlers_t *handlers, const rg
     heap_caps_get_info(&heap_info, MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);
     RG_LOGI("External memory: free=%d, total=%d\n", heap_info.total_free_bytes, heap_info.total_free_bytes + heap_info.total_allocated_bytes);
 
+    char *ptr = heap_caps_malloc(0x100000, MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);
+    printf("allocated 1M at %p\n", ptr);
+    strcpy(ptr, "Hello World!");
+    printf("written '%s' to %p\n", ptr, ptr);
+    // then for good measure let's try a calloc, which is what rg_alloc does.
+    char *ptr2 = heap_caps_calloc(1, 0x100000, MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);
+    printf("allocated another 1M at %p\n", ptr2);
+    free(ptr);
+    free(ptr2);
+
     app = (rg_app_t){
         .name = esp_app->project_name,
         .version = esp_app->version,
