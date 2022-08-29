@@ -151,7 +151,7 @@ static void spi_init(void)
     esp_err_t ret;
 
     //Initialize the SPI bus
-    ret = spi_bus_initialize(RG_GPIO_LCD_HOST, &buscfg, SPI_DMA_CH_AUTO);
+    ret = spi_bus_initialize(RG_GPIO_LCD_HOST, &buscfg, 2); // SPI_DMA_CH_AUTO
     RG_ASSERT(ret == ESP_OK || ret == ESP_ERR_INVALID_STATE, "spi_bus_initialize failed.");
 
     ret = spi_bus_add_device(RG_GPIO_LCD_HOST, &devcfg, &spi_dev);

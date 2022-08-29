@@ -79,7 +79,7 @@ void rg_storage_init(void)
     slot_config.gpio_mosi = RG_GPIO_SDSPI_MOSI;
     slot_config.gpio_sck  = RG_GPIO_SDSPI_CLK;
     slot_config.gpio_cs = RG_GPIO_SDSPI_CS;
-    slot_config.dma_channel = SPI_DMA_CH_AUTO;
+    slot_config.dma_channel = 1; // SPI_DMA_CH_AUTO;
 
 #elif RG_STORAGE_DRIVER == 2
 
