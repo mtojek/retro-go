@@ -23,8 +23,8 @@
 
 // Input
 #define RG_GAMEPAD_DRIVER           1   // 1 = ODROID-GO, 2 = Serial, 3 = MRGC-IO
-#define RG_GAMEPAD_HAS_MENU_BTN     1
-#define RG_GAMEPAD_HAS_OPTION_BTN   1
+#define RG_GAMEPAD_HAS_MENU_BTN     0
+#define RG_GAMEPAD_HAS_OPTION_BTN   0
 #define RG_BATTERY_ADC_CHANNEL      ADC1_CHANNEL_0
 #define RG_BATTERY_CALC_PERCENT(raw) (((raw) * 2.f - 3500.f) / (4200.f - 3500.f) * 100.f)
 #define RG_BATTERY_CALC_VOLTAGE(raw) ((raw) * 2.f * 0.001f)
@@ -37,14 +37,14 @@
 // #define RG_GPIO_I2C_SCL             GPIO_NUM_4
 
 // Built-in gamepad
-#define RG_GPIO_GAMEPAD_X           ADC1_CHANNEL_6
-#define RG_GPIO_GAMEPAD_Y           ADC1_CHANNEL_7
-#define RG_GPIO_GAMEPAD_SELECT      GPIO_NUM_27
-#define RG_GPIO_GAMEPAD_START       GPIO_NUM_39
-#define RG_GPIO_GAMEPAD_A           GPIO_NUM_32
-#define RG_GPIO_GAMEPAD_B           GPIO_NUM_33
-#define RG_GPIO_GAMEPAD_MENU        GPIO_NUM_13
-#define RG_GPIO_GAMEPAD_OPTION      GPIO_NUM_0
+#define RG_GPIO_GAMEPAD_X           ADC1_CHANNEL_0 // pin VP
+#define RG_GPIO_GAMEPAD_Y           ADC1_CHANNEL_3 // pin VN
+#define RG_GPIO_GAMEPAD_SELECT      GPIO_NUM_32
+#define RG_GPIO_GAMEPAD_START       GPIO_NUM_33
+#define RG_GPIO_GAMEPAD_A           GPIO_NUM_4
+#define RG_GPIO_GAMEPAD_B           GPIO_NUM_5
+#define RG_GPIO_GAMEPAD_MENU        GPIO_NUM_0
+#define RG_GPIO_GAMEPAD_OPTION      GPIO_NUM_21
 
 // SNES-style gamepad
 // #define RG_GPIO_GAMEPAD_LATCH       GPIO_NUM_NC
@@ -70,5 +70,5 @@
 // External I2S DAC
 #define RG_GPIO_SND_I2S_BCK         GPIO_NUM_25
 #define RG_GPIO_SND_I2S_WS          GPIO_NUM_26
-#define RG_GPIO_SND_I2S_DATA        GPIO_NUM_5
+#define RG_GPIO_SND_I2S_DATA        GPIO_NUM_27
 // #define RG_GPIO_SND_AMP_ENABLE      GPIO_NUM_NC
