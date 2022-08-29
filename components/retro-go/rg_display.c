@@ -287,7 +287,7 @@ static void lcd_init(void)
     ILI9341_CMD(0x36, {(0x20|0x80|0x08)});                      // Memory Access Control
 
     ILI9341_CMD(0x36, {(0x40|0x80|0x08)});                      // Memory Access Control
-    //ILI9341_CMD(0x21, {0x80});                                  // invert colors
+    ILI9341_CMD(0x21, {0x80});                                  // invert colors
 
     ILI9341_CMD(0xB1, {0x00, 0x10});                            // Frame Rate Control (1B=70, 1F=61, 10=119)
     ILI9341_CMD(0xB6, {0x0A, 0xA2});                            // Display Function Control
