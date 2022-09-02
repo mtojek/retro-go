@@ -31,7 +31,7 @@
 #define RG_BATTERY_CALC_VOLTAGE(raw) ((raw) * 2.f * 0.001f)
 
 // Status LED
-#define RG_GPIO_LED                 GPIO_NUM_2
+// #define RG_GPIO_LED                 GPIO_NUM_2
 
 // I2C BUS
 // #define RG_GPIO_I2C_SDA             GPIO_NUM_15
