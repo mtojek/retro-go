@@ -57,7 +57,7 @@
 #define RG_GPIO_LCD_MISO            GPIO_NUM_12
 #define RG_GPIO_LCD_MOSI            GPIO_NUM_13
 #define RG_GPIO_LCD_CLK             GPIO_NUM_14
-#define RG_GPIO_LCD_CS              GPIO_NUM_21
+#define RG_GPIO_LCD_CS              GPIO_NUM_15
 #define RG_GPIO_LCD_DC              GPIO_NUM_2
 #define RG_GPIO_LCD_BCKL            GPIO_NUM_8
 
@@ -69,7 +69,7 @@
 #define RG_GPIO_SDSPI_CS            GPIO_NUM_17
 
 // External I2S DAC
-#define RG_GPIO_SND_I2S_BCK         GPIO_NUM_4
-#define RG_GPIO_SND_I2S_WS          GPIO_NUM_12
-#define RG_GPIO_SND_I2S_DATA        GPIO_NUM_15
+#define RG_GPIO_SND_I2S_BCK         GPIO_NUM_5
+#define RG_GPIO_SND_I2S_WS          GPIO_NUM_6
+#define RG_GPIO_SND_I2S_DATA        GPIO_NUM_21
 // #define RG_GPIO_SND_AMP_ENABLE      GPIO_NUM_NC

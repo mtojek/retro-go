@@ -4,6 +4,7 @@
 #include <driver/spi_master.h>
 #include <driver/gpio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "rg_system.h"
 #include "rg_display.h"
@@ -95,6 +96,7 @@ static void spi_pre_transfer_cb(spi_transaction_t *t)
 {
     // Set the data/command line accordingly
     gpio_set_level(RG_GPIO_LCD_DC, (int)t->user & 1);
+    usleep(20);
 }
 
 IRAM_ATTR
@@ -236,10 +238,11 @@ static void lcd_init(void)
     ILI9341_CMD(0xC5, {0x32, 0x3C});                            // VCM control
     ILI9341_CMD(0xC7, {0x91});                                  // VCM control2
     ILI9341_CMD(0x36, {(0x20|0x80|0x08)});                      // Memory Access Control
-    ILI9341_CMD(0xB1, {0x00, 0x10});                            // Frame Rate Control (1B=70, 1F=61, 10=119)
+    ILI9341_CMD(0xB1, {0x00, 0x1F});                            // Frame Rate Control (1B=70, 1F=61, 10=119)
+    ILI9341_CMD(0xB3, {0x00, 0x1F});
     ILI9341_CMD(0xB6, {0x0A, 0xA2});                            // Display Function Control
     ILI9341_CMD(0xF6, {0x01, 0x30});
-    ILI9341_CMD(0xF2, {0x00});                                  // 3Gamma Function Disable
+    ILI9341_CMD(0xF2, {0x02});                                  // 3Gamma Function Disable
     ILI9341_CMD(0x26, {0x01});                                  // Gamma curve selected
     ILI9341_CMD(0xE0, {0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00}); // Set Gamma
     ILI9341_CMD(0xE1, {0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F}); // Set Gamma
@@ -290,10 +293,11 @@ static void lcd_init(void)
     ILI9341_CMD(0x36, {(0x40|0x80|0x08)});                      // Memory Access Control
     ILI9341_CMD(0x21, {0x80});                                  // invert colors
 
-    ILI9341_CMD(0xB1, {0x00, 0x10});                            // Frame Rate Control (1B=70, 1F=61, 10=119)
+    ILI9341_CMD(0xB1, {0x00, 0x1F});                            // Frame Rate Control (1B=70, 1F=61, 10=119)
+    ILI9341_CMD(0xB3, {0x00, 0x1F});
     ILI9341_CMD(0xB6, {0x0A, 0xA2});                            // Display Function Control
     ILI9341_CMD(0xF6, {0x01, 0x30});
-    ILI9341_CMD(0xF2, {0x00});                                  // 3Gamma Function Disable
+    ILI9341_CMD(0xF2, {0x02});                                  // 3Gamma Function Disable
     ILI9341_CMD(0x26, {0x01});                                  // Gamma curve selected
     ILI9341_CMD(0xE0, {0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00}); // Set Gamma
     ILI9341_CMD(0xE1, {0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F}); // Set Gamma
@@ -768,7 +772,7 @@ rg_update_t rg_display_queue_update(/*const*/ rg_video_update_t *update, const r
         // rest also changed. This is true in 77% of the cases in Pokemon, resulting in a net
         // benefit. The other 23% of cases would have benefited from finishing the diff, so a better
         // heuristic might be preferable (interlaced compare perhaps?).
-        int threshold = (frame_width * frame_height) / 2;
+        int threshold = (frame_width * frame_height) * 0.50;
         int changed = 0;
 
         for (int y = 0; y < frame_height; ++y)
