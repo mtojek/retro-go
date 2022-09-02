@@ -8,3 +8,5 @@ sdkconfig
 /*.img
 /*.zip
 __pycache__/
+
+*.swp
