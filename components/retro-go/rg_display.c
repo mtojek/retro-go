@@ -148,7 +148,7 @@ static void spi_init(void)
     };
 
     const spi_device_interface_config_t devcfg = {
-        .clock_speed_hz = SPI_MASTER_FREQ_80M,  // 80Mhz causes glitches unfortunately
+        .clock_speed_hz = SPI_MASTER_FREQ_40M,  // 80Mhz causes glitches unfortunately
         .mode = 0,                              // SPI mode 0
         .spics_io_num = RG_GPIO_LCD_CS,         // CS pin
         .queue_size = SPI_TRANSACTION_COUNT,    // We want to be able to queue 5 transactions at a time
