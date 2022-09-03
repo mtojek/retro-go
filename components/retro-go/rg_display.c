@@ -96,7 +96,13 @@ static void spi_pre_transfer_cb(spi_transaction_t *t)
 {
     // Set the data/command line accordingly
     gpio_set_level(RG_GPIO_LCD_DC, (int)t->user & 1);
-    // usleep(20);
+}
+
+IRAM_ATTR
+static void spi_post_transfer_cb(spi_transaction_t *t)
+{
+    // Set the data/command line accordingly
+    gpio_set_level(RG_GPIO_LCD_DC, 0);
 }
 
 IRAM_ATTR
@@ -142,12 +148,13 @@ static void spi_init(void)
     };
 
     const spi_device_interface_config_t devcfg = {
-        .clock_speed_hz = SPI_MASTER_FREQ_40M,  // 80Mhz causes glitches unfortunately
+        .clock_speed_hz = SPI_MASTER_FREQ_80M,  // 80Mhz causes glitches unfortunately
         .mode = 0,                              // SPI mode 0
         .spics_io_num = RG_GPIO_LCD_CS,         // CS pin
         .queue_size = SPI_TRANSACTION_COUNT,    // We want to be able to queue 5 transactions at a time
         .pre_cb = &spi_pre_transfer_cb,         // Specify pre-transfer callback to handle D/C line and SPI lock
         .flags = SPI_DEVICE_NO_DUMMY,           // SPI_DEVICE_HALFDUPLEX;
+	.post_cb = &spi_post_transfer_cb,
     };
 
     esp_err_t ret;
@@ -216,10 +223,10 @@ static void lcd_init(void)
 
     // Setup Data/Command line
     // gpio_iomux_out(RG_GPIO_LCD_DC, PIN_FUNC_GPIO, false);
-    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[RG_GPIO_LCD_DC], PIN_FUNC_GPIO);
+    // PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[RG_GPIO_LCD_DC], PIN_FUNC_GPIO);
     gpio_set_direction(RG_GPIO_LCD_DC, GPIO_MODE_OUTPUT);
     gpio_set_level(RG_GPIO_LCD_DC, 1);
-    gpio_set_pull_mode(RG_GPIO_LCD_DC, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode(RG_GPIO_LCD_DC, GPIO_PULLUP_PULLDOWN);
 
     spi_init();
 
@@ -772,7 +779,7 @@ rg_update_t rg_display_queue_update(/*const*/ rg_video_update_t *update, const r
         // rest also changed. This is true in 77% of the cases in Pokemon, resulting in a net
         // benefit. The other 23% of cases would have benefited from finishing the diff, so a better
         // heuristic might be preferable (interlaced compare perhaps?).
-        int threshold = (frame_width * frame_height) * 0.50;
+        int threshold = (frame_width * frame_height) * 0.5;
         int changed = 0;
 
         for (int y = 0; y < frame_height; ++y)
