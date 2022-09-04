@@ -326,5 +326,44 @@ void app_main(void)
 
     ftp_server_start();
 
+    const useconds_t sleep_time = 10000U;
+
+    const uint16_t W = 320;
+    const uint16_t H = 240;
+
+    uint16_t *img = (uint16_t *) rg_alloc(W * H * 2, MEM_SLOW);
+    uint16_t *iptr = img;
+
+    uint16_t *img2 = (uint16_t *) rg_alloc(W * H * 2, MEM_SLOW);
+    uint16_t *iptr2 = img2;
+
+    iptr = img;
+    for (uint16_t y = 0; y < H; y++) {
+    	for (uint16_t x = 0; x < W; x++) {
+        	iptr[x + y * W] = 0x2820;
+        }
+    }
+
+    iptr2 = img2;
+    for (uint16_t y = 0; y < H; y++) {
+        for (uint16_t x = 0; x < W; x++) {
+                iptr2[x + y * W] = 0x2028;
+	}
+    }
+
+    while (1) {
+            RG_LOGI("1 rg_display_write start\n");
+            rg_display_write(0, 0, W, H, 0, img);
+            RG_LOGI("1 rg_display_write end\n");
+
+	    usleep(sleep_time);
+
+	    RG_LOGI("2 rg_display_write start\n");
+            rg_display_write(0, 0, W, H, 0, img2);
+            RG_LOGI("2 rg_display_write end\n");
+
+            usleep(sleep_time);
+    }
+
     retro_loop();
 }

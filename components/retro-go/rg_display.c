@@ -99,13 +99,6 @@ static void spi_pre_transfer_cb(spi_transaction_t *t)
 }
 
 IRAM_ATTR
-static void spi_post_transfer_cb(spi_transaction_t *t)
-{
-    // Set the data/command line accordingly
-    gpio_set_level(RG_GPIO_LCD_DC, 0);
-}
-
-IRAM_ATTR
 static void spi_task(void *arg)
 {
     spi_transaction_t *t;
@@ -148,13 +141,12 @@ static void spi_init(void)
     };
 
     const spi_device_interface_config_t devcfg = {
-        .clock_speed_hz = SPI_MASTER_FREQ_40M,  // 80Mhz causes glitches unfortunately
+        .clock_speed_hz = SPI_MASTER_FREQ_80M,  // 80Mhz causes glitches unfortunately
         .mode = 0,                              // SPI mode 0
         .spics_io_num = RG_GPIO_LCD_CS,         // CS pin
         .queue_size = SPI_TRANSACTION_COUNT,    // We want to be able to queue 5 transactions at a time
         .pre_cb = &spi_pre_transfer_cb,         // Specify pre-transfer callback to handle D/C line and SPI lock
         .flags = SPI_DEVICE_NO_DUMMY,           // SPI_DEVICE_HALFDUPLEX;
-	.post_cb = &spi_post_transfer_cb,
     };
 
     esp_err_t ret;
