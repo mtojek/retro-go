@@ -95,6 +95,7 @@ typedef struct {
     struct {
         uint32_t totalFrames;
         uint32_t fullFrames;
+	int64_t busyTime; // This is only time spent blocking the main task
     } counters;
     bool changed;
     bool redraw;
