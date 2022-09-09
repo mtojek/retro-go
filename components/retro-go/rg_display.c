@@ -755,7 +755,7 @@ rg_update_t rg_display_queue_update(/*const*/ rg_video_update_t *update, const r
         // rest also changed. This is true in 77% of the cases in Pokemon, resulting in a net
         // benefit. The other 23% of cases would have benefited from finishing the diff, so a better
         // heuristic might be preferable (interlaced compare perhaps?).
-        int threshold = (frame_width * frame_height) / 2;
+        int threshold = (frame_width * frame_height) * 0.95;
         int changed = 0;
 
         for (int y = 0; y < frame_height; ++y)
