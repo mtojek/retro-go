@@ -326,7 +326,7 @@ void app_main(void)
 
     ftp_server_start();
 
-    const useconds_t sleep_time = 10000U;
+    /*const useconds_t sleep_time = 10000U;
 
     const uint16_t W = 320;
     const uint16_t H = 240;
@@ -363,7 +363,7 @@ void app_main(void)
             RG_LOGI("2 rg_display_write end\n");
 
             usleep(sleep_time);
-    }
+    }*/
 
     retro_loop();
 }

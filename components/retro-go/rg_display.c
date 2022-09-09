@@ -576,63 +576,6 @@ static void update_viewport_scaling(void)
            display.viewport.x_pos, display.viewport.y_pos, display.viewport.x_inc, display.viewport.y_inc);
 }
 
-static void display_task(void *arg)
-{
-    display_task_queue = xQueueCreate(1, sizeof(rg_video_update_t *));
-
-    while (1)
-    {
-        rg_video_update_t *update;
-
-        xQueuePeek(display_task_queue, &update, portMAX_DELAY);
-        // xQueueReceive(display_task_queue, &update, portMAX_DELAY);
-
-        if (!update) break;
-
-        if (display.changed)
-        {
-            if (display.config.scaling != RG_DISPLAY_SCALING_FILL)
-                rg_display_clear(C_BLACK);
-            update_viewport_scaling();
-            update->type = RG_UPDATE_FULL;
-            display.changed = false;
-        }
-
-        if (update->type == RG_UPDATE_FULL)
-        {
-            // write_rect();
-            update->diff[0] = (rg_line_diff_t){
-                .left = 0,
-                .width = display.source.width,
-                .repeat = display.source.height
-            };
-        }
-
-        // It's better to update the counters before we start the transfer, in case someone needs it
-        if (update->type == RG_UPDATE_FULL)
-            display.counters.fullFrames++;
-        display.counters.totalFrames++;
-
-        for (int y = 0; y < display.source.height;)
-        {
-            rg_line_diff_t *diff = &update->diff[y];
-
-            if (diff->width > 0)
-            {
-                write_rect(diff->left, y, diff->width, diff->repeat, update->buffer, update->palette);
-            }
-            y += diff->repeat;
-        }
-
-        xQueueReceive(display_task_queue, &update, portMAX_DELAY);
-    }
-
-    vQueueDelete(display_task_queue);
-    display_task_queue = NULL;
-
-    vTaskDelete(NULL);
-}
-
 void rg_display_force_redraw(void)
 {
     display.changed = true;
@@ -743,140 +686,15 @@ bool rg_display_save_frame(const char *filename, const rg_video_update_t *frame,
 IRAM_ATTR
 rg_update_t rg_display_queue_update(/*const*/ rg_video_update_t *update, const rg_video_update_t *previousUpdate)
 {
-    // RG_ASSERT(display.source.width && display.source.height, "Source format not set!");
-    RG_ASSERT(update, "update is null!");
-
-    if (!previousUpdate || display.changed || display.config.update == RG_DISPLAY_UPDATE_FULL)
+    if (display.changed)
     {
-        update->type = RG_UPDATE_FULL;
+	if (display.config.scaling != RG_DISPLAY_SCALING_FILL)
+            rg_display_clear(C_BLACK);
+        update_viewport_scaling();
+        display.changed = false;
     }
-    else if (PTR_IN_SPIRAM(update->buffer) && PTR_IN_SPIRAM(previousUpdate->buffer))
-    {
-        // There's no speed benefit in trying to diff when both buffers are in SPIRAM,
-        // it will almost always be faster to just update it everything...
-        update->type = RG_UPDATE_FULL;
-    }
-    else // RG_UPDATE_PARTIAL
-    {
-        const uint32_t *frame_buffer = update->buffer + display.source.offset; // uint64_t is 0.7% faster!
-        const uint32_t *prev_buffer = previousUpdate->buffer + display.source.offset;
-        const int frame_width = display.source.width;
-        const int frame_height = display.source.height;
-        const int stride = display.source.stride;
-        const int blocks = (frame_width * display.source.pixlen) / sizeof(*frame_buffer);
-        const int pixels_per_block = sizeof(*frame_buffer) / display.source.pixlen;
-        rg_line_diff_t *out_diff = update->diff;
-
-        // If more than 50% of the screen has changed then stop the comparison and assume that the
-        // rest also changed. This is true in 77% of the cases in Pokemon, resulting in a net
-        // benefit. The other 23% of cases would have benefited from finishing the diff, so a better
-        // heuristic might be preferable (interlaced compare perhaps?).
-        int threshold = (frame_width * frame_height) * 0.5;
-        int changed = 0;
-
-        for (int y = 0; y < frame_height; ++y)
-        {
-            int left = 0, width = 0;
-
-            for (int x = 0; x < blocks && changed < threshold; ++x)
-            {
-                if (frame_buffer[x] != prev_buffer[x])
-                {
-                    for (int xl = blocks - 1; xl >= x; --xl)
-                    {
-                        if (frame_buffer[xl] != prev_buffer[xl]) {
-                            left = x * pixels_per_block;
-                            width = ((xl + 1) - x) * pixels_per_block;
-                            changed += width;
-                            break;
-                        }
-                    }
-                    break;
-                }
-            }
-
-            out_diff[y].left = left;
-            out_diff[y].width = width;
-            out_diff[y].repeat = 1;
-
-            frame_buffer = (void*)frame_buffer + stride;
-            prev_buffer = (void*)prev_buffer + stride;
-        }
-
-        if (changed == 0)
-        {
-            update->type = RG_UPDATE_EMPTY;
-        }
-        else if (changed >= threshold)
-        {
-            update->type = RG_UPDATE_FULL;
-        }
-        else
-        {
-            update->type = RG_UPDATE_PARTIAL;
-
-            // If filtering is enabled we must adjust our diff blocks to be on appropriate boundaries
-            if (display.config.filter && display.config.scaling)
-            {
-                for (int y = 0; y < frame_height; ++y)
-                {
-                    if (out_diff[y].width < 1)
-                        continue;
-
-                    int block_start = y;
-                    int block_end = y;
-                    int left = out_diff[y].left;
-                    int right = left + out_diff[y].width;
-
-                    while (block_start > 0 && (out_diff[block_start].width > 0 || !filter_lines[block_start].start))
-                        block_start--;
-
-                    while (block_end < frame_height - 1 && (out_diff[block_end].width > 0 || !filter_lines[block_end].stop))
-                        block_end++;
-
-                    for (int i = block_start; i <= block_end; i++)
-                    {
-                        if (out_diff[i].width > 0) {
-                            right = RG_MAX(right, out_diff[i].left + out_diff[i].width);
-                            left = RG_MIN(left, out_diff[i].left);
-                        }
-                    }
-
-                    left = RG_MAX(left - 1, 0);
-                    right = RG_MIN(right + 1, frame_width);
-
-                    for (int i = block_start; i <= block_end; i++)
-                    {
-                        out_diff[i].left = left;
-                        out_diff[i].width = right - left;
-                    }
-
-                    y = block_end;
-                }
-            }
-
-            // Combine consecutive lines with similar changes location to optimize the SPI transfer
-            rg_line_diff_t *line = &out_diff[frame_height - 1];
-            rg_line_diff_t *prev_line = line - 1;
-
-            for (; line > out_diff; --line, --prev_line)
-            {
-                int right = line->left + line->width;
-                int right_prev = prev_line->left + prev_line->width;
-
-                if (abs(line->left - prev_line->left) <= 8 && abs(right - right_prev) <= 8)
-                {
-                    if (line->left < prev_line->left) prev_line->left = line->left;
-                    prev_line->width = RG_MAX(right, right_prev) - prev_line->left;
-                    prev_line->repeat = line->repeat + 1;
-                }
-            }
-        }
-    }
-
-    xQueueSend(display_task_queue, &update, portMAX_DELAY);
-
-    return update->type;
+    write_rect(0, 0, display.source.width, display.source.height, update->buffer, update->palette);
+    return RG_UPDATE_FULL;
 }
 
 void rg_display_set_source_format(int width, int height, int crop_h, int crop_v, int stride, int format)
@@ -1008,6 +826,6 @@ void rg_display_init(void)
         .changed = true,
     };
     lcd_init();
-    xTaskCreatePinnedToCore(&display_task, "display_task", 2560, NULL, 5, NULL, 1);
+    display_task_queue = xQueueCreate(1, sizeof(rg_video_update_t *));
     RG_LOGI("Display ready.\n");
 }
