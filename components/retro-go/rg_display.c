@@ -584,7 +584,11 @@ static void display_task(void *arg)
     {
         rg_video_update_t *update;
 
-        xQueuePeek(display_task_queue, &update, portMAX_DELAY);
+        BaseType_t peaked = xQueuePeek(display_task_queue, &update, portMAX_DELAY);
+	if (peaked != pdTRUE)
+	{
+		RG_LOGI("peaked: %d\n", peaked);
+	}
         // xQueueReceive(display_task_queue, &update, portMAX_DELAY);
 
         if (!update) break;
