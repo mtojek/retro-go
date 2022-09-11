@@ -25,7 +25,7 @@
 #define RG_GAMEPAD_DRIVER           1   // 1 = ODROID-GO, 2 = Serial, 3 = MRGC-IO
 #define RG_GAMEPAD_HAS_MENU_BTN     1
 #define RG_GAMEPAD_HAS_OPTION_BTN   1
-#define RG_BATTERY_ADC_CHANNEL      ADC1_CHANNEL_6
+#define RG_BATTERY_ADC_CHANNEL      ADC1_CHANNEL_0 // VP, GPIO36
 #define RG_BATTERY_CALC_PERCENT(raw) (((raw) * 2.f - 3500.f) / (4200.f - 3500.f) * 100.f)
 #define RG_BATTERY_CALC_VOLTAGE(raw) ((raw) * 2.f * 0.001f)
 
@@ -37,8 +37,8 @@
 // #define RG_GPIO_I2C_SCL             GPIO_NUM_4
 
 // Built-in gamepad
-#define RG_GPIO_GAMEPAD_X           ADC1_CHANNEL_0 // pin VP
-#define RG_GPIO_GAMEPAD_Y           ADC1_CHANNEL_3 // pin VN
+#define RG_GPIO_GAMEPAD_X           ADC1_CHANNEL_3 // VN, GPIO39
+#define RG_GPIO_GAMEPAD_Y           ADC1_CHANNEL_6 // GPIO34
 #define RG_GPIO_GAMEPAD_SELECT      GPIO_NUM_32
 #define RG_GPIO_GAMEPAD_START       GPIO_NUM_33
 #define RG_GPIO_GAMEPAD_A           GPIO_NUM_4
