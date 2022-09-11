@@ -23,14 +23,14 @@
 
 // Input
 #define RG_GAMEPAD_DRIVER           1   // 1 = ODROID-GO, 2 = Serial, 3 = MRGC-IO
-#define RG_GAMEPAD_HAS_MENU_BTN     0
-#define RG_GAMEPAD_HAS_OPTION_BTN   0
+#define RG_GAMEPAD_HAS_MENU_BTN     1
+#define RG_GAMEPAD_HAS_OPTION_BTN   1
 #define RG_BATTERY_ADC_CHANNEL      ADC1_CHANNEL_6
 #define RG_BATTERY_CALC_PERCENT(raw) (((raw) * 2.f - 3500.f) / (4200.f - 3500.f) * 100.f)
 #define RG_BATTERY_CALC_VOLTAGE(raw) ((raw) * 2.f * 0.001f)
 
 // Status LED
-#define RG_GPIO_LED                 GPIO_NUM_2
+// #define RG_GPIO_LED                 GPIO_NUM_2
 
 // I2C BUS
 // #define RG_GPIO_I2C_SDA             GPIO_NUM_15
@@ -53,12 +53,12 @@
 
 // SPI Display
 #define RG_GPIO_LCD_HOST            SPI2_HOST
-#define RG_GPIO_LCD_MISO            GPIO_NUM_NC
+#define RG_GPIO_LCD_MISO            GPIO_NUM_12
 #define RG_GPIO_LCD_MOSI            GPIO_NUM_13
 #define RG_GPIO_LCD_CLK             GPIO_NUM_14
 #define RG_GPIO_LCD_CS              GPIO_NUM_15
 #define RG_GPIO_LCD_DC              GPIO_NUM_2
-#define RG_GPIO_LCD_BCKL            GPIO_NUM_12
+#define RG_GPIO_LCD_BCKL            GPIO_NUM_NC
 
 // SPI SD Card
 #define RG_GPIO_SDSPI_HOST          SPI3_HOST
@@ -68,7 +68,7 @@
 #define RG_GPIO_SDSPI_CS            GPIO_NUM_22
 
 // External I2S DAC
-#define RG_GPIO_SND_I2S_BCK         GPIO_NUM_25
-#define RG_GPIO_SND_I2S_WS          GPIO_NUM_26
-#define RG_GPIO_SND_I2S_DATA        GPIO_NUM_27
+#define RG_GPIO_SND_I2S_BCK         GPIO_NUM_NC
+#define RG_GPIO_SND_I2S_WS          GPIO_NUM_NC
+#define RG_GPIO_SND_I2S_DATA        GPIO_NUM_NC
 // #define RG_GPIO_SND_AMP_ENABLE      GPIO_NUM_NC
