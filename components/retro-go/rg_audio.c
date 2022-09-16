@@ -16,7 +16,7 @@ static int audioSink = -1;
 static int audioSampleRate = 0;
 static int audioFilter = 0;
 static int audioVolume = 50;
-static bool audioMuted = false;
+static bool audioMuted = true;
 static SemaphoreHandle_t audioDevLock;
 static int64_t dummyBusyUntil = 0;
 
