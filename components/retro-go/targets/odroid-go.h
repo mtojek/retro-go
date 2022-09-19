@@ -26,7 +26,7 @@
 #define RG_GAMEPAD_HAS_MENU_BTN     1
 #define RG_GAMEPAD_HAS_OPTION_BTN   1
 #define RG_BATTERY_ADC_CHANNEL      ADC1_CHANNEL_0 // VP, GPIO36
-#define RG_BATTERY_CALC_PERCENT(raw) (((raw) * 2.f - 3500.f) / (4200.f - 3500.f) * 100.f)
+#define RG_BATTERY_CALC_PERCENT(raw) (((raw) * 2.f - 4000.f) / (5000.f - 4000.f) * 100.f)
 #define RG_BATTERY_CALC_VOLTAGE(raw) ((raw) * 2.f * 0.001f)
 
 // Status LED
