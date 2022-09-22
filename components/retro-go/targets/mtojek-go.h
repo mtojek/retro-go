@@ -68,7 +68,6 @@
 // #define RG_GPIO_LCD_RESET          GPIO_NUM_NC
 
 // SPI SD Card
-#define RG_GPIO_SDSPI_HOST          SPI3_HOST
 #define RG_GPIO_SDSPI_MISO          GPIO_NUM_19
 #define RG_GPIO_SDSPI_MOSI          GPIO_NUM_23
 #define RG_GPIO_SDSPI_CLK           GPIO_NUM_18
