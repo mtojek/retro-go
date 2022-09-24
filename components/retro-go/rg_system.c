@@ -73,7 +73,6 @@ static rg_task_t tasks[8];
 static int ledValue = -1;
 static int wdtCounter = 0;
 static bool exitCalled = false;
-static bool initialized = false;
 
 static const char *SETTING_BOOT_NAME = "BootName";
 static const char *SETTING_BOOT_ARGS = "BootArgs";
@@ -323,8 +322,6 @@ rg_app_t *rg_system_init(int sampleRate, const rg_handlers_t *handlers, const rg
         .logLevel = RG_LOG_INFO,
         .options = options, // TO DO: We should make a copy of it?
     };
-    if (handlers)
-        app.handlers = *handlers;
 
     tasks[0].handle = xTaskGetCurrentTaskHandle();
     strncpy(tasks[0].name, "main", 20);
@@ -409,6 +406,13 @@ rg_app_t *rg_system_init(int sampleRate, const rg_handlers_t *handlers, const rg
     if (app.bootFlags & RG_BOOT_ONCE)
         rg_system_set_boot_app(RG_APP_LAUNCHER);
 
+    rtc_time_init();
+
+    // Do these last to not interfere with panic handling above
+    if (handlers)
+        app.handlers = *handlers;
+    atexit(&exit_handler);
+
     #ifdef RG_ENABLE_PROFILING
     RG_LOGI("Profiling has been enabled at compile time!\n");
     rg_profiler_init();
@@ -418,13 +422,9 @@ rg_app_t *rg_system_init(int sampleRate, const rg_handlers_t *handlers, const rg
     rg_netplay_init(app.handlers.event);
     #endif
 
-    // Do this last to not interfere with panic handling above
-    atexit(&exit_handler);
-    rtc_time_init();
-
     rg_task_create("rg_system", &system_monitor_task, NULL, 3 * 1024, RG_TASK_PRIORITY, -1);
 
-    initialized = true;
+    app.initialized = true;
 
     RG_LOGI("Retro-Go ready.\n\n");
 
