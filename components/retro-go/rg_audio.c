@@ -5,11 +5,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#ifdef RG_TARGET_SDL2
-#include <SDL2/SDL.h>
-#else
+#ifndef RG_TARGET_SDL2
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
+#else
+#include <SDL2/SDL.h>
 #endif
 
 #if RG_AUDIO_USE_INT_DAC || RG_AUDIO_USE_EXT_DAC
@@ -23,11 +23,15 @@
 #endif
 
 #if RG_AUDIO_USE_INT_DAC
+#ifdef CONFIG_IDF_TARGET_ESP32
 #include <driver/dac.h>
+#else
+#error "Only the ESP32 has a DAC! Please set RG_AUDIO_USE_INT_DAC to 0 in your target file."
+#endif
 #endif
 
 static const rg_audio_sink_t sinks[] = {
-    {RG_AUDIO_SINK_DUMMY,   0, "Dummy"},
+    {RG_AUDIO_SINK_DUMMY,   0, "Dummy"  },
 #if RG_AUDIO_USE_INT_DAC
     {RG_AUDIO_SINK_I2S_DAC, 0, "Speaker"},
 #endif
@@ -35,9 +39,9 @@ static const rg_audio_sink_t sinks[] = {
     {RG_AUDIO_SINK_I2S_EXT, 0, "Ext DAC"},
 #endif
 #if RG_AUDIO_USE_SDL2
-    {RG_AUDIO_SINK_SDL2, 0, "SDL2"},
+    {RG_AUDIO_SINK_SDL2,    0, "SDL2"   },
 #endif
-    // {RG_AUDIO_SINK_BT_A2DP, 0, "Bluetooth"},
+  // {RG_AUDIO_SINK_BT_A2DP, 0, "Bluetooth"},
 };
 
 static rg_audio_t audio;
@@ -50,9 +54,19 @@ static const char *SETTING_OUTPUT = "AudioSink";
 static const char *SETTING_VOLUME = "Volume";
 static const char *SETTING_FILTER = "AudioFilter";
 
-#define ACQUIRE_DEVICE(timeout) ({int x=xSemaphoreTake(audioDevLock, timeout);if(!x)RG_LOGE("Failed to acquire lock!\n");x;})
+#ifndef RG_TARGET_SDL2
+#define ACQUIRE_DEVICE(timeout)                        \
+    ({                                                 \
+        int x = xSemaphoreTake(audioDevLock, timeout); \
+        if (!x)                                        \
+            RG_LOGE("Failed to acquire lock!\n");      \
+        x;                                             \
+    })
 #define RELEASE_DEVICE() xSemaphoreGive(audioDevLock);
-
+#else
+#define ACQUIRE_DEVICE(timeout) (1)
+#define RELEASE_DEVICE()
+#endif
 
 void rg_audio_init(int sampleRate)
 {
@@ -240,28 +254,30 @@ void rg_audio_submit(const rg_audio_sample_t *samples, size_t count)
         size_t written = 0;
         size_t pos = 0;
 
+        // In speaker mode we use left and right as a differential mono output to increase resolution.
+        bool differential = audio.sink->type == RG_AUDIO_SINK_I2S_DAC;
+
         for (size_t i = 0; i < count; ++i)
         {
             int left = samples[i].left * volume;
             int right = samples[i].right * volume;
 
-            // In speaker mode we use left and right as a differential mono output to increase resolution.
-            if (audio.sink->type == RG_AUDIO_SINK_I2S_DAC)
+            if (differential)
             {
                 int sample = (left + right) >> 1;
                 if (sample > 0x7F00)
                 {
-                    left  =  0x8000 + (sample - 0x7F00);
+                    left = 0x8000 + (sample - 0x7F00);
                     right = -0x8000 + 0x7F00;
                 }
                 else if (sample < -0x7F00)
                 {
-                    left  =  0x8000 + (sample + 0x7F00);
+                    left = 0x8000 + (sample + 0x7F00);
                     right = -0x8000 + -0x7F00;
                 }
                 else
                 {
-                    left  =  0x8000;
+                    left = 0x8000;
                     right = -0x8000 + sample;
                 }
             }
@@ -276,7 +292,7 @@ void rg_audio_submit(const rg_audio_sample_t *samples, size_t count)
 
             if (i == count - 1 || ++pos == RG_COUNT(buffer))
             {
-                if (i2s_write(I2S_NUM_0, (void*)buffer, pos * 4, &written, 1000) != ESP_OK)
+                if (i2s_write(I2S_NUM_0, (void *)buffer, pos * 4, &written, 1000) != ESP_OK)
                     RG_LOGW("I2S Submission error! Written: %d/%d\n", written, pos * 4);
                 pos = 0;
             }
