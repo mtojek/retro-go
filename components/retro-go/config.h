@@ -7,10 +7,9 @@
 #elif defined(RG_TARGET_RETRO_ESP32)
 #include "targets/retro-esp32.h"
 #elif defined(RG_TARGET_SDL2)
-    #include "targets/sdl2.h"
-#elif defined(RG_TARGET_MTOJEK_GO)
-    #include "targets/mtojek-go.h"
 #include "targets/sdl2.h"
+#elif defined(RG_TARGET_MTOJEK_GO)
+#include "targets/mtojek-go.h"
 #else
 #warning "No target defined. Defaulting to ODROID-GO."
 #include "targets/odroid-go.h"
