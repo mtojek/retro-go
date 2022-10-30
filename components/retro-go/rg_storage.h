@@ -9,18 +9,19 @@
 #define RG_BASE_PATH_CACHE  RG_BASE_PATH "/cache"
 #define RG_BASE_PATH_CONFIG RG_BASE_PATH "/config"
 #define RG_BASE_PATH_COVERS RG_STORAGE_ROOT "/romart"
+#define RG_BASE_PATH_MUSIC  RG_STORAGE_ROOT "/music"
 #define RG_BASE_PATH_ROMS   RG_STORAGE_ROOT "/roms"
 #define RG_BASE_PATH_SAVES  RG_BASE_PATH "/saves"
 #define RG_BASE_PATH_THEMES RG_BASE_PATH "/themes"
 
 typedef struct __attribute__((packed))
 {
-    uint32_t is_valid : 1;
-    uint32_t is_file  : 1;
-    uint32_t is_dir   : 1;
-    uint32_t unused   : 5;
-    uint32_t size     : 24;
-    char name[76];
+    uint8_t is_valid : 1;
+    uint8_t is_file  : 1;
+    uint8_t is_dir   : 1;
+    uint8_t unused   : 5;
+    char name[75];
+    int32_t mtime, size;
 } rg_scandir_t;
 
 enum

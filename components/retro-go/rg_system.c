@@ -363,6 +363,11 @@ rg_app_t *rg_system_init(int sampleRate, const rg_handlers_t *handlers, const rg
     // Do this very early, may be needed to enable serial console
     setup_gpios();
 
+#ifdef RG_TARGET_SDL2
+    freopen("stdout.txt", "w", stdout);
+    freopen("stderr.txt", "w", stderr);
+#endif
+
     printf("\n========================================================\n");
     printf("%s %s (%s %s)\n", app.name, app.version, app.buildDate, app.buildTime);
     printf(" built for: %s. aud=%d disp=%d pad=%d sd=%d cfg=%d\n", RG_TARGET_NAME, 0, 0, 0, 0, 0);
@@ -389,18 +394,11 @@ rg_app_t *rg_system_init(int sampleRate, const rg_handlers_t *handlers, const rg
     // Storage must be initialized first (SPI bus, settings, assets, etc)
     rg_storage_init();
 
-    if ((app.isLauncher = strcmp(app.name, RG_APP_LAUNCHER) == 0))
-    {
-        app.configNs = app.name;
-    }
-    else
-    {
-        app.configNs = rg_settings_get_string(NS_BOOT, SETTING_BOOT_NAME, app.name);
-        app.bootArgs = rg_settings_get_string(NS_BOOT, SETTING_BOOT_ARGS, "");
-        app.bootFlags = rg_settings_get_number(NS_BOOT, SETTING_BOOT_FLAGS, 0);
-        app.saveSlot = (app.bootFlags & RG_BOOT_SLOT_MASK) >> 4;
-        app.romPath = app.bootArgs;
-    }
+    app.configNs = rg_settings_get_string(NS_BOOT, SETTING_BOOT_NAME, app.name);
+    app.bootArgs = rg_settings_get_string(NS_BOOT, SETTING_BOOT_ARGS, "");
+    app.bootFlags = rg_settings_get_number(NS_BOOT, SETTING_BOOT_FLAGS, 0);
+    app.saveSlot = (app.bootFlags & RG_BOOT_SLOT_MASK) >> 4;
+    app.romPath = app.bootArgs;
 
     rg_input_init(); // Must be first for the qtpy (input -> aw9523 -> lcd)
     rg_display_init();
@@ -876,7 +874,11 @@ void rg_system_switch_app(const char *partition, const char *name, const char *a
 
 bool rg_system_have_app(const char *app)
 {
+#ifndef RG_TARGET_SDL2
     return esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, app) != NULL;
+#else
+    return true;
+#endif
 }
 
 void rg_system_panic(const char *context, const char *message)

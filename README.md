@@ -37,7 +37,7 @@ compatibility!
 - And more!
 
 ### Screenshots
-![Preview](retro-go-preview.jpg)
+![Preview](assets/retro-go-preview.jpg)
 
 
 # Installation
@@ -74,6 +74,9 @@ Some emulators support loading a BIOS. The files should be placed as follows:
 - GB: `/retro-go/bios/gb_bios.bin`
 - GBC: `/retro-go/bios/gbc_bios.bin`
 - FDS: `/retro-go/bios/fds_bios.bin`
+
+## Game & Watch
+The roms must be packed with [LCD-Game-Shrinker](https://github.com/bzhxx/LCD-Game-Shrinker) and a tutorial can be [found here](https://gist.github.com/DNA64/16fed499d6bd4664b78b4c0a9638e4ef).
 
 ## Wifi
 
@@ -159,7 +162,7 @@ rg_tool.py supports a few environment variables if you want to avoid passing fla
 - `RG_TOOL_PORT` represents --port
 
 ## Changing the launcher's images
-All images used by the launcher (headers, logos) are located in `launcher/images`. If you edit them you must run the `launcher/gen_images.py` script to regenerate `images.c`. Magenta (rgb(255, 0, 255) / 0xF81F) is used as the transparency colour.
+All images used by the launcher (headers, logos) are located in `launcher/main/images`. If you edit them you must run the `launcher/main/gen_images.py` script to regenerate `images.c`. Magenta (rgb(255, 0, 255) / 0xF81F) is used as the transparency colour.
 
 ## Capturing crash logs
 When a panic occurs, Retro-Go has the ability to save debugging information to `/sd/crash.log`. This provides users with a simple way of recovering a backtrace (and often more) without having to install drivers and serial console software. A weak hook is installed into esp-idf panic's putchar, allowing us to save each chars in RTC RAM. Then, after the system resets, we can move that data to the sd card. You will find a small esp-idf patch to enable this feature in tools/patches.

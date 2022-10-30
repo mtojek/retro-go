@@ -63,6 +63,8 @@ static esp_err_t http_api_handler(httpd_req_t *req)
             cJSON *obj = cJSON_CreateObject();
             cJSON_AddStringToObject(obj, "name", entry->name);
             cJSON_AddNumberToObject(obj, "size", entry->size);
+            cJSON_AddNumberToObject(obj, "mtime", entry->mtime);
+            // cJSON_AddBoolToObject(obj, "is_file", entry->is_file);
             cJSON_AddBoolToObject(obj, "is_dir", entry->is_dir);
             cJSON_AddItemToArray(array, obj);
         }
@@ -144,7 +146,8 @@ static esp_err_t http_upload_handler(httpd_req_t *req)
     {
         RG_LOGE("Received %d/%d bytes", received, req->content_len);
         httpd_resp_sendstr(req, "ERROR");
-        return ESP_OK;
+        unlink(filename);
+        return ESP_FAIL;
     }
 
     RG_LOGI("Received %d/%d bytes", received, req->content_len);
