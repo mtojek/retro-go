@@ -125,7 +125,7 @@ bool rg_network_sync_time(const char *host, int *out_delta)
         return false;
     }
 
-    memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, server->h_length);
+    memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, 4); // 4 - IPv4
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(123);
 
