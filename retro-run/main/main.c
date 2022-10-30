@@ -16,9 +16,9 @@ void app_main(void)
     RG_LOGI("This is an experimental wrapper to bundle multiple apps in a single binary.");
     RG_LOGI("configNs=%s", app->configNs);
 
-    if (strcmp(app->configNs, "gbc") == 0 || strcmp(app->configNs, "gb") == 0)
-        gbc_main();
-    else if (strcmp(app->configNs, "nes") == 0)
+//    if (strcmp(app->configNs, "gbc") == 0 || strcmp(app->configNs, "gb") == 0)
+//        gbc_main();
+    /*else*/ if (strcmp(app->configNs, "nes") == 0)
         nes_main();
     else if (strcmp(app->configNs, "pce") == 0)
         pce_main();
