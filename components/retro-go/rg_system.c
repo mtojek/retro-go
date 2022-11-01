@@ -211,6 +211,7 @@ static void system_monitor_task(void *arg)
     int64_t lastLoop = rg_system_timer();
     int32_t numLoop = 0;
     float batteryPercent = 0.f;
+    float batteryVolts = 0.f;
     bool ledState = false;
 
     // Give the app a few seconds to start before monitoring
@@ -226,7 +227,7 @@ static void system_monitor_task(void *arg)
         // Maybe we should *try* to wait for vsync before updating?
         update_statistics();
 
-        if (rg_input_read_battery(&batteryPercent, NULL))
+        if (rg_input_read_battery(&batteryPercent, &batteryVolts))
         {
             if (batteryPercent < 2)
                 rg_system_set_led((ledState ^= 1));
@@ -234,7 +235,7 @@ static void system_monitor_task(void *arg)
                 rg_system_set_led((ledState = 0));
         }
 
-        RG_LOGX("STACK:%d, HEAP:%d+%d (%d+%d), BUSY:%.2f, FPS:%.2f (SKIP:%d, PART:%d, FULL:%d), BATT:%.2f\n",
+        RG_LOGX("STACK:%d, HEAP:%d+%d (%d+%d), BUSY:%.2f, FPS:%.2f (SKIP:%d, PART:%d, FULL:%d), BATT:%.2f (%.2fV)\n",
             statistics.freeStackMain,
             statistics.freeMemoryInt / 1024,
             statistics.freeMemoryExt / 1024,
@@ -245,7 +246,7 @@ static void system_monitor_task(void *arg)
             (int)(statistics.skippedFPS + 0.9f),
             (int)(statistics.totalFPS - statistics.skippedFPS - statistics.fullFPS + 0.9f),
             (int)(statistics.fullFPS + 0.9f),
-            batteryPercent);
+            batteryPercent, batteryVolts);
 
         if ((wdtCounter -= loopTime_us) <= 0)
         {

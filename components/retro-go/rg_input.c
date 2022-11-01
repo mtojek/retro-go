@@ -273,7 +273,7 @@ void rg_input_init(void)
 #if USE_ADC_DRIVER
     adc1_config_width(ADC_WIDTH_MAX - 1);
     adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_11);
-    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_MAX - 1, 1100, &adc_chars);
+    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_MAX - 1, 1177, &adc_chars);
 #endif
 
     // Start background polling
