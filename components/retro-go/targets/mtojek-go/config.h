@@ -30,6 +30,12 @@
 #define RG_GAMEPAD_DRIVER           2   // 1 = ODROID-GO, 2 = Serial, 3 = I2C, 4 = AW9523, 5 = ESPLAY-S3, 6 = SDL2
 #define RG_GAMEPAD_HAS_MENU_BTN     1
 #define RG_GAMEPAD_HAS_OPTION_BTN   1
+#define RG_GPIO_GAMEPAD_MENU         GPIO_NUM_5
+#define RG_GPIO_GAMEPAD_OPTION       GPIO_NUM_4
+
+#define RG_GPIO_GAMEPAD_LATCH       GPIO_NUM_32
+#define RG_GPIO_GAMEPAD_CLOCK       GPIO_NUM_33
+#define RG_GPIO_GAMEPAD_DATA        GPIO_NUM_35
 
 // Battery
 #define RG_BATTERY_ADC_CHANNEL      ADC1_CHANNEL_0 // VP, GPIO36
@@ -42,21 +48,6 @@
 // I2C BUS
 // #define RG_GPIO_I2C_SDA             GPIO_NUM_15
 // #define RG_GPIO_I2C_SCL             GPIO_NUM_4
-
-// Built-in gamepad
-// #define RG_GPIO_GAMEPAD_X           ADC1_CHANNEL_6
-// #define RG_GPIO_GAMEPAD_Y           ADC1_CHANNEL_7
-// #define RG_GPIO_GAMEPAD_SELECT      GPIO_NUM_27
-// #define RG_GPIO_GAMEPAD_START       GPIO_NUM_39
-// #define RG_GPIO_GAMEPAD_A           GPIO_NUM_32
-// #define RG_GPIO_GAMEPAD_B           GPIO_NUM_33
-#define RG_GPIO_GAMEPAD_MENU        GPIO_NUM_5
-#define RG_GPIO_GAMEPAD_OPTION      GPIO_NUM_4
-
-// SNES-style gamepad
-#define RG_GPIO_GAMEPAD_LATCH       GPIO_NUM_32
-#define RG_GPIO_GAMEPAD_CLOCK       GPIO_NUM_33
-#define RG_GPIO_GAMEPAD_DATA        GPIO_NUM_35
 
 // SPI Display
 #define RG_GPIO_LCD_MISO            GPIO_NUM_NC
