@@ -31,14 +31,15 @@ static rg_display_counters_t counters;
 static rg_display_config_t config;
 static rg_display_t display;
 
-static struct {
+// static rg_video_update_t updates[2];
+
+static struct
+{
     uint8_t start  : 1; // Indicates this line or column is safe to start an update on
     uint8_t stop   : 1; // Indicates this line or column is safe to end an update on
     uint8_t repeat : 6; // How many times the line or column is repeated by the scaler or filter
 } filter_lines[320];
-static struct {
-    uint8_t empty;
-} screen_lines[RG_SCREEN_HEIGHT];
+static uint8_t screen_line_is_empty[RG_SCREEN_HEIGHT];
 
 static const char *SETTING_BACKLIGHT = "DispBacklight";
 static const char *SETTING_SCALING = "DispScaling";
@@ -328,6 +329,22 @@ static void lcd_init(void)
 	ILI9341_CMD(0x11, {0x03});   //Exit Sleep
 	ILI9341_CMD(0x29, {0x03});   //Display on
 	usleep(100 * 1000);
+#elif RG_SCREEN_TYPE == 5 // Game Box Mini Screen
+    ILI9341_CMD(0x3A, {0x55}); // Pixel Format Set RGB565
+    ILI9341_CMD(0x0c, {0x0c, 0x00, 0x33, 0x33});
+    ILI9341_CMD(0xB7, {0x72});
+    ILI9341_CMD(0xBB, {0x3d});
+    ILI9341_CMD(0xC0, {0x2C});                                  // Power control 
+    ILI9341_CMD(0xC2, {0x01, 0xFF});
+    ILI9341_CMD(0xC3, {0x19});
+    ILI9341_CMD(0xC4, {0x20});
+    ILI9341_CMD(0xC6, {0x0f});
+    ILI9341_CMD(0xD0, {0xA4, 0xA1});
+    ILI9341_CMD(0xE0, {0xD0, 0x00, 0x05, 0x0E, 0x15, 0x0D, 0x37, 0x43, 0x47, 0x09, 0x15, 0x12, 0x16, 0x19}); // Set Gamma
+    ILI9341_CMD(0xE1, {0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19}); // Set Gamma
+    ILI9341_CMD(0x21, {0x80});   
+    ILI9341_CMD(0x11, {0x80}); // Exit Sleep
+    ILI9341_CMD(0x29, {0x80}); // Display on
 #else
     #error "LCD init sequence is not defined for this device!"
 #endif
@@ -442,8 +459,8 @@ static inline void write_rect(int left, int top, int width, int height,
         // The vertical filter requires a block to start and end with unscaled lines
         if (filter_y)
         {
-            while (lines_to_copy > 1 && (screen_lines[screen_y + lines_to_copy - 1].empty ||
-                                         screen_lines[screen_y + lines_to_copy].empty))
+            while (lines_to_copy > 1 && (screen_line_is_empty[screen_y + lines_to_copy - 1] ||
+                                         screen_line_is_empty[screen_y + lines_to_copy]))
                 --lines_to_copy;
         }
 
@@ -457,7 +474,7 @@ static inline void write_rect(int left, int top, int width, int height,
 
         for (int i = 0; i < lines_to_copy; ++i)
         {
-            if (i > 0 && screen_lines[screen_y].empty)
+            if (i > 0 && screen_line_is_empty[screen_y])
             {
                 memcpy(line_buffer_ptr, line_buffer_ptr - scaled_width, scaled_width * 2);
                 line_buffer_ptr += scaled_width;
@@ -482,7 +499,7 @@ static inline void write_rect(int left, int top, int width, int height,
                     RENDER_LINE(buffer.u16[x])
             }
 
-            if (!screen_lines[++screen_y].empty)
+            if (!screen_line_is_empty[++screen_y])
             {
                 buffer.u8 += stride;
                 ++y;
@@ -495,7 +512,7 @@ static inline void write_rect(int left, int top, int width, int height,
 
             for (int y = 0, fill_line = -1; y < lines_to_copy; y++)
             {
-                if (filter_y && y && screen_lines[top + y].empty)
+                if (filter_y && y && screen_line_is_empty[top + y])
                 {
                     fill_line = y;
                     continue;
@@ -581,7 +598,7 @@ static void update_viewport_scaling(void)
     // Build boundary tables used by filtering
 
     memset(filter_lines, 1, sizeof(filter_lines));
-    memset(screen_lines, 0, sizeof(screen_lines));
+    memset(screen_line_is_empty, 0, RG_SCREEN_HEIGHT);
 
     int y_acc = (display.viewport.y_inc * display.viewport.y_pos) % display.screen.height;
 
@@ -591,7 +608,7 @@ static void update_viewport_scaling(void)
 
         filter_lines[y].start = repeat == 1 || repeat == 2;
         filter_lines[y].stop = repeat == 1;
-        screen_lines[screen_y].empty = repeat > 1;
+        screen_line_is_empty[screen_y] = repeat > 1;
 
         y_acc += display.viewport.y_inc;
         while (y_acc >= display.screen.height)
@@ -618,7 +635,7 @@ static void display_task(void *arg)
         // xQueueReceive(display_task_queue, &update, portMAX_DELAY);
 
         // Received a shutdown request!
-        if (update == (void*)-1)
+        if (update == (void *)-1)
             break;
 
         if (display.changed)
@@ -786,7 +803,7 @@ bool rg_display_save_frame(const char *filename, const rg_video_update_t *frame,
 }
 
 IRAM_ATTR
-rg_update_t rg_display_queue_update(/*const*/ rg_video_update_t *update, const rg_video_update_t *previousUpdate)
+rg_update_t rg_display_submit(/*const*/ rg_video_update_t *update, const rg_video_update_t *previousUpdate)
 {
     const int64_t time_start = rg_system_timer();
     // RG_ASSERT(display.source.width && display.source.height, "Source format not set!");
@@ -878,7 +895,8 @@ rg_update_t rg_display_queue_update(/*const*/ rg_video_update_t *update, const r
                     while (block_start > 0 && (out_diff[block_start].width > 0 || !filter_lines[block_start].start))
                         block_start--;
 
-                    while (block_end < frame_height - 1 && (out_diff[block_end].width > 0 || !filter_lines[block_end].stop))
+                    while (block_end < frame_height - 1 &&
+                           (out_diff[block_end].width > 0 || !filter_lines[block_end].stop))
                         block_end++;
 
                     for (int i = block_start; i <= block_end; i++)
@@ -948,6 +966,12 @@ void rg_display_set_source_format(int width, int height, int crop_h, int crop_v,
     display.source.pixlen = format & RG_PIXEL_PAL ? 1 : 2;
     display.source.offset = (display.source.crop_v * stride) + (display.source.crop_h * display.source.pixlen);
     display.changed = true;
+}
+
+bool rg_display_is_busy(void)
+{
+    return uxQueueMessagesWaiting(spi_transactions) < SPI_TRANSACTION_COUNT
+        || uxQueueMessagesWaiting(display_task_queue);
 }
 
 void rg_display_sync(void)
@@ -1038,7 +1062,7 @@ void rg_display_clear(uint16_t color_le)
 
 void rg_display_deinit(void)
 {
-    void *stop = (void*)-1;
+    void *stop = (void *)-1;
     xQueueSend(display_task_queue, &stop, portMAX_DELAY);
     while (display_task_queue)
         rg_task_delay(1);

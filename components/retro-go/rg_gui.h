@@ -64,13 +64,15 @@ struct rg_gui_option_s
     rg_gui_callback_t update_cb;
 };
 
-#define RG_DIALOG_FLAG_DISABLED  0 // (1 << 0)
-#define RG_DIALOG_FLAG_NORMAL    1 // (1 << 1)
-#define RG_DIALOG_FLAG_SKIP     -1 // (1 << 2)
-#define RG_DIALOG_FLAG_LAST      0xF0F0
+#define RG_DIALOG_FLAG_DISABLED (0)  // (1 << 0)
+#define RG_DIALOG_FLAG_NORMAL   (1)  // (1 << 1)
+#define RG_DIALOG_FLAG_SKIP     (-1) // (1 << 2)
 
-#define RG_DIALOG_CHOICE_LAST {0, NULL, NULL, RG_DIALOG_FLAG_LAST, NULL}
+#define RG_DIALOG_CHOICE_LAST {0, NULL, NULL, 0, NULL}
 #define RG_DIALOG_SEPARATOR   {0, "----------", NULL, RG_DIALOG_FLAG_SKIP, NULL}
+#define RG_DIALOG_END         RG_DIALOG_CHOICE_LAST
+
+#define RG_DIALOG_CANCELLED -0x7654321
 
 #define TEXT_RECT(text, max) rg_gui_draw_text(-(max), 0, 0, (text), 0, 0, RG_TEXT_MULTILINE|RG_TEXT_DUMMY_DRAW)
 
@@ -80,13 +82,17 @@ void rg_gui_clear(rg_color_t color); // like rg_display_clear but takes gui scre
 void rg_gui_set_buffered(bool buffered);
 bool rg_gui_set_font_type(int type);
 bool rg_gui_set_theme(const char *theme_name);
+const char *rg_gui_get_theme(void);
 rg_rect_t rg_gui_draw_text(int x_pos, int y_pos, int width, const char *text, rg_color_t color_fg, rg_color_t color_bg, uint32_t flags);
 void rg_gui_copy_buffer(int left, int top, int width, int height, int stride, const void *buffer);
 void rg_gui_draw_rect(int x_pos, int y_pos, int width, int height, int border_size, rg_color_t border_color, rg_color_t fill_color);
 void rg_gui_draw_battery(int x_pos, int y_pos);
+void rg_gui_draw_radio(int x_pos, int y_pos);
+void rg_gui_draw_clock(int x_pos, int y_pos);
 void rg_gui_draw_dialog(const char *header, const rg_gui_option_t *options, int sel);
 void rg_gui_draw_image(int x_pos, int y_pos, int width, int height, bool resample, const rg_image_t *img);
 void rg_gui_draw_hourglass(void); // This should be moved to system or display...
+void rg_gui_draw_status_bars(void);
 
 void rg_gui_show_info(const char *text, rg_color_t color, int timeout_ms);
 int  rg_gui_dialog(const char *title, const rg_gui_option_t *options, int selected_index);
@@ -95,10 +101,13 @@ void rg_gui_alert(const char *title, const char *message);
 char *rg_gui_file_picker(const char *title, const char *path, bool (*validator)(const char *path));
 
 int rg_gui_savestate_menu(const char *title, const char *rom_path, bool quick_return);
-int rg_gui_options_menu(void);
-int rg_gui_game_menu(void);
-int rg_gui_about_menu(const rg_gui_option_t *extra_options);
-int rg_gui_debug_menu(const rg_gui_option_t *extra_options);
+void rg_gui_options_menu(void);
+void rg_gui_game_menu(void);
+void rg_gui_about_menu(const rg_gui_option_t *extra_options);
+void rg_gui_debug_menu(const rg_gui_option_t *extra_options);
+
+// Creates a 565LE color from C_RGB(255, 255, 255)
+#define C_RGB(r, g, b) ((((r) >> 3) << 11) | (((g) >> 2) << 5) | (((b) & 0x1F)))
 
 /* -------------------------------------------------------------------------------- */
 /* -- µGUI COLORS                                                                -- */

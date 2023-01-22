@@ -18,8 +18,8 @@ except:
     pass
 
 TARGETS = ["odroid-go"] # We just need to specify the default, the others are discovered below
-for t in glob.glob("components/retro-go/targets/*.h"):
-    TARGETS.append(os.path.basename(t)[0:-2])
+for t in glob.glob("components/retro-go/targets/*/config.h"):
+    TARGETS.append(os.path.basename(os.path.dirname(t)))
 
 DEFAULT_TARGET = os.getenv("RG_TOOL_TARGET", TARGETS[0])
 DEFAULT_BAUD = os.getenv("RG_TOOL_BAUD", "1152000")
@@ -40,10 +40,6 @@ if os.path.exists("rg_config.py"):
 # else: something like
 #     for file in glob(*/CMakeLists.txt):
 #       PROJECT_APPS[basename(dirname(file))] = [0, 0, 0, 0]
-
-
-if not os.getenv("IDF_PATH"):
-    exit("IDF_PATH is not defined. Are you running inside esp-idf environment?")
 
 
 class Symbol:
@@ -125,7 +121,7 @@ def analyze_profile(frames):
         debug_print("")
 
 
-def build_firmware(apps, device_type):
+def build_firmware(apps, device_type, fw_format="odroid-go"):
     print("Building firmware with: %s\n" % " ".join(apps))
     args = [
         sys.executable,
@@ -135,7 +131,7 @@ def build_firmware(apps, device_type):
         PROJECT_ICON
     ]
 
-    if device_type in ["mrgc-g32", "esplay"]:
+    if fw_format == "esplay":
         args.append("--esplay")
 
     for app in apps:
@@ -201,14 +197,14 @@ def clean_app(app):
     print("Done.\n")
 
 
-def build_app(app, device_type, with_profiling=False, with_netplay=False):
+def build_app(app, device_type, with_profiling=False, without_networking=False):
     # To do: clean up if any of the flags changed since last build
     print("Building app '%s'" % app)
     os.putenv("RG_ENABLE_PROFILING", "1" if with_profiling else "0")
-    os.putenv("RG_ENABLE_NETPLAY", "1" if with_netplay else "0")
+    os.putenv("RG_ENABLE_NETWORKING", "0" if without_networking else "1")
     os.putenv("RG_BUILD_TARGET", re.sub(r'[^A-Z0-9]', '_', device_type.upper()))
     os.putenv("RG_BUILD_TIME", str(int(time.time())))
-    os.putenv("PROJECT_VER", PROJECT_VER)
+    os.putenv("RG_BUILD_VERSION", PROJECT_VER)
     subprocess.run("idf.py app", shell=True, check=True, cwd=os.path.join(os.getcwd(), app))
 
     try:
@@ -216,6 +212,8 @@ def build_app(app, device_type, with_profiling=False, with_netplay=False):
         with open(os.path.join(app, "build", app + ".bin"), "r+b") as fp:
             fp.seek(23)
             fp.write(b"\0")
+            fp.seek(0, os.SEEK_END)
+            print(" size=%d " % fp.tell(), end="")
         print("done!\n")
     except: # don't really care if that fails
         print("failed!\n")
@@ -296,7 +294,7 @@ parser.add_argument(
     "--target", default=DEFAULT_TARGET, choices=set(TARGETS), help="Device to target"
 )
 parser.add_argument(
-    "--with-netplay", action="store_const", const=True, help="Build with netplay enabled"
+    "--without-networking", action="store_const", const=True, help="Build without networking enabled"
 )
 parser.add_argument(
     "--port", default=DEFAULT_PORT, help="Serial port to use for flash and monitor"
@@ -306,14 +304,21 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-
 command = args.command
 apps = [app for app in PROJECT_APPS.keys() if app in args.apps or "all" in args.apps]
 
-if command in ["build-fw", "build-img", "release"]:
-    if "launcher" not in apps:
-        print("\nWARNING: The launcher is mandatory for those apps and will be included!\n")
-        apps.insert(0, "launcher")
+
+if os.path.exists(f"components/retro-go/targets/{args.target}/env.py"):
+    with open(f"components/retro-go/targets/{args.target}/env.py", "rb") as f:
+        exec(f.read())
+
+if not os.getenv("IDF_PATH"):
+    exit("IDF_PATH is not defined. Are you running inside esp-idf environment?")
+
+
+if command in ["build-fw", "build-img", "release"] and "launcher" not in apps:
+    print("\nWARNING: The launcher is mandatory for those apps and will be included!\n")
+    apps.insert(0, "launcher")
 
 if command in ["clean", "release"]:
     print("=== Step: Cleaning ===\n")
@@ -323,11 +328,11 @@ if command in ["clean", "release"]:
 if command in ["build", "build-fw", "build-img", "release", "run", "profile"]:
     print("=== Step: Building ===\n")
     for app in apps:
-        build_app(app, args.target, command == "profile", args.with_netplay)
+        build_app(app, args.target, command == "profile", args.without_networking)
 
 if command in ["build-fw", "release"]:
     print("=== Step: Packing ===\n")
-    build_firmware(apps, args.target)
+    build_firmware(apps, args.target, os.getenv("FW_FORMAT", "odroid-go"))
 
 if command in ["build-img", "release"]:
     print("=== Step: Packing ===\n")
