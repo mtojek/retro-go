@@ -280,6 +280,7 @@ static int scandir_natural_sort(const void *a, const void *b)
     return 0;
 }
 
+// FIXME: rg_scandir_t should probably be {count, items[]} to avoid walking the array to get the count...
 rg_scandir_t *rg_storage_scandir(const char *path, bool (*validator)(const char *path), uint32_t flags)
 {
     DIR *dir = opendir(path);
@@ -322,19 +323,19 @@ rg_scandir_t *rg_storage_scandir(const char *path, bool (*validator)(const char 
 
         strncpy(result->name, basename, sizeof(result->name) - 1);
         result->is_valid = 1;
-        #if defined(DT_REG) && defined(DT_DIR)
-            result->is_file = ent->d_type == DT_REG;
-            result->is_dir = ent->d_type == DT_DIR;
-        #else
-            flags |= RG_SCANDIR_STAT;
-        #endif
+    #if defined(DT_REG) && defined(DT_DIR)
+        result->is_file = ent->d_type == DT_REG;
+        result->is_dir = ent->d_type == DT_DIR;
+    #else
+        flags |= RG_SCANDIR_STAT;
+    #endif
 
         if ((flags & RG_SCANDIR_STAT) && stat(fullpath, &statbuf) == 0)
         {
             result->is_file = S_ISREG(statbuf.st_mode);
             result->is_dir = S_ISDIR(statbuf.st_mode);
             result->size = statbuf.st_size;
-            result->mtime = statbuf.st_mtim.tv_sec;
+            result->mtime = statbuf.st_mtime;
         }
     }
     memset(&results[count], 0, sizeof(rg_scandir_t));

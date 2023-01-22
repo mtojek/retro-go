@@ -230,6 +230,7 @@ void gui_save_config(void)
     rg_settings_set_string(NS_APP, SETTING_HIDDEN_TABS, gui.hidden_tabs);
     for (int i = 0; i < gui.tabs_count; i++)
         rg_settings_set_number(NS_APP, SETTING_HIDE_TAB(gui.tabs[i]->name), !gui.tabs[i]->enabled);
+    rg_settings_commit();
 }
 
 listbox_item_t *gui_get_selected_item(tab_t *tab)
@@ -426,8 +427,12 @@ void gui_draw_status(tab_t *tab)
 
     rg_gui_draw_battery(-22, 3);
 
+#ifdef RG_ENABLE_NETWORKING
     rg_gui_draw_radio(-45, 3);
     rg_gui_draw_clock(-(50 + TEXT_RECT("00:00", 0).width), 3);
+#else
+    rg_gui_draw_clock(-(20 + TEXT_RECT("00:00", 0).width), 3);
+#endif
 
     rg_gui_draw_text(status_x, status_y, gui.width, txt_right, C_SNOW, C_TRANSPARENT, RG_TEXT_ALIGN_LEFT);
     rg_gui_draw_text(status_x, status_y, 0, txt_left, C_WHITE, C_TRANSPARENT, RG_TEXT_ALIGN_RIGHT);

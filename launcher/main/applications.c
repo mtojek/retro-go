@@ -65,6 +65,19 @@ static void scan_folder(retro_app_t *app, const char* path, void *parent)
         if (!is_valid)
             continue;
 
+        if (app->files_count + 1 > app->files_capacity)
+        {
+            size_t new_capacity = app->files_capacity * 1.5;
+            retro_file_t *new_buf = realloc(app->files, new_capacity * sizeof(retro_file_t));
+            if (!new_buf)
+            {
+                RG_LOGW("Ran out of memory, file scanning stopped at %d entries ...\n", app->files_count);
+                break;
+            }
+            app->files = new_buf;
+            app->files_capacity = new_capacity;
+        }
+
         app->files[app->files_count++] = (retro_file_t) {
             .name = strdup(entry->name),
             .folder = folder,
@@ -72,18 +85,6 @@ static void scan_folder(retro_app_t *app, const char* path, void *parent)
             .type = type,
             .is_valid = true,
         };
-
-        if ((app->files_count % 10) == 0)
-        {
-            size_t new_size = (app->files_count + 10 + 2) * sizeof(retro_file_t);
-            retro_file_t *new_buf = realloc(app->files, new_size);
-            if (!new_buf)
-            {
-                RG_LOGW("Ran out of memory, file scanning stopped at %d entries ...\n", app->files_count);
-                break;
-            }
-            app->files = new_buf;
-        }
 
         if (type == 0xFF)
         {
@@ -291,6 +292,7 @@ void crc_cache_idle_task(tab_t *tab)
 
             gui_set_status(tab, "", "");
             gui_redraw(); // gui_draw_status(tab);
+            rg_system_tick(0);
         }
     }
 
@@ -304,7 +306,7 @@ static void tab_refresh(tab_t *tab)
     memset(&tab->status, 0, sizeof(tab->status));
 
     const char *basepath = const_string(app->paths.roms);
-    const char *folder = tab->navpath ?: basepath;
+    const char *folder = const_string(tab->navpath ?: basepath);
     size_t items_count = 0;
     char *ext = NULL;
 
@@ -369,7 +371,7 @@ static void event_handler(gui_event_t event, tab_t *tab)
 
     if (event == TAB_INIT)
     {
-        retro_file_t *selected = bookmark_find_first(BOOK_TYPE_RECENT, app);
+        retro_file_t *selected = bookmark_find_by_app(BOOK_TYPE_RECENT, app);
         tab->navpath = selected ? selected->folder : NULL;
 
         application_init(app);
@@ -544,7 +546,7 @@ static void show_file_info(retro_file_t *file)
         RG_DIALOG_SEPARATOR,
         {5, "Delete file", NULL, 1, NULL},
         {1, "Close", NULL, 1, NULL},
-        RG_DIALOG_CHOICE_LAST
+        RG_DIALOG_END,
     };
 
     sprintf(filesize, "%ld KB", st.st_size / 1024);
@@ -596,7 +598,7 @@ void application_show_file_menu(retro_file_t *file, bool advanced)
         {2, "Delete save", NULL, has_save || has_sram, NULL},
         RG_DIALOG_SEPARATOR,
         {4, "Properties", NULL, 1, NULL},
-        RG_DIALOG_CHOICE_LAST
+        RG_DIALOG_END,
     };
 
     int sel = rg_gui_dialog(NULL, choices, has_save ? 0 : 1);
@@ -667,7 +669,8 @@ static void application(const char *desc, const char *name, const char *exts, co
     snprintf(app->paths.saves, RG_PATH_MAX, RG_BASE_PATH_SAVES "/%s", app->short_name);
     snprintf(app->paths.roms, RG_PATH_MAX, RG_BASE_PATH_ROMS "/%s", app->short_name);
     app->available = rg_system_have_app(app->partition);
-    app->files = calloc(10, sizeof(retro_file_t));
+    app->files = calloc(100, sizeof(retro_file_t));
+    app->files_capacity = 100;
     app->crc_offset = crc_offset;
 
     gui_add_tab(app->short_name, app->description, app, event_handler);
@@ -675,17 +678,17 @@ static void application(const char *desc, const char *name, const char *exts, co
 
 void applications_init(void)
 {
-    application("Nintendo Entertainment System", "nes", "nes fc fds nsf", "retro-run", 16);
+    application("Nintendo Entertainment System", "nes", "nes fc fds nsf", "retro-core", 16);
     application("Super Nintendo", "snes", "smc sfc", "snes9x-go", 0);
-    application("Nintendo Gameboy", "gb", "gb gbc", "retro-run", 0);
-    application("Nintendo Gameboy Color", "gbc", "gbc gb", "retro-run", 0);
-    application("Nintendo Game & Watch", "gw", "gw", "retro-run", 0);
+    application("Nintendo Gameboy", "gb", "gb gbc", "retro-core", 0);
+    application("Nintendo Gameboy Color", "gbc", "gbc gb", "retro-core", 0);
+    application("Nintendo Game & Watch", "gw", "gw", "retro-core", 0);
     application("Sega Master System", "sms", "sms sg", "smsplusgx-go", 0);
     application("Sega Game Gear", "gg", "gg", "smsplusgx-go", 0);
     application("Sega Mega Drive", "md", "md gen bin", "gwenesis", 0);
     application("Coleco ColecoVision", "col", "col", "smsplusgx-go", 0);
-    application("NEC PC Engine", "pce", "pce", "retro-run", 0);
-    application("Atari Lynx", "lnx", "lnx", "retro-run", 64);
+    application("NEC PC Engine", "pce", "pce", "retro-core", 0);
+    application("Atari Lynx", "lnx", "lnx", "retro-core", 64);
     // application("Atari 2600", "a26", "a26", "stella-go", 0);
     // application("Neo Geo Pocket Color", "ngp", "ngp ngc", "ngpocket-go", 0);
     application("DOOM", "doom", "wad", "prboom-go", 0);

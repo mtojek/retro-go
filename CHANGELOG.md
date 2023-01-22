@@ -1,3 +1,33 @@
+# Retro-Go 1.37 (2022-12-30)
+- SNES: Fixed controls menu labels
+- GEN: Small performance improvement
+- Launcher: Added tool to download updates
+
+
+# Retro-Go 1.36.3 (2022-12-14)
+- SNES: Fixed freeze in controls menu (hopefully for real this time...)
+
+
+# Retro-Go 1.36.2 (2022-12-07)
+- SNES: Fixed crash in controls menu
+- Launcher: Start wifi access point
+
+
+# Retro-Go 1.36.1 (2022-11-29)
+- Fixed MRGC/esplay builds
+
+
+# Retro-Go 1.36 (2022-11-28)
+- GBC: Fixed Pokemon Trading Card Game
+- SNES: Added support for ROMs with extra headers
+- SNES: Added low pass filter toggle
+- GEN: Added support for interleaved ROMs
+- Lynx: Changed samplerate to fix some audio issues
+- Launcher: Fixed recently played list
+- Wifi and WebUI improvements
+- Improved recovery mode reliability
+
+
 # Retro-Go 1.35 (2022-10-18)
 - SNES: New Snes9x port (based on 2005 version) with sound!
 - GEN: Improved compatibility (updated from bzhxx's upstream)
