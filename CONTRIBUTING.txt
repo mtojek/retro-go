@@ -1,0 +1,6 @@
+cd esp-idf
+. ./export.sh
+
+cd retro-go
+RG_TOOL_TARGET=mtojek-go ./rg_tool.py build-img retro-core prboom-go
+esptool.py write_flash --flash_size 4MB 0x0 retro-go_1.37-20-g24531-dirty_mtojek-go.img
